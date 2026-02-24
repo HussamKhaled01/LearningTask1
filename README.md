@@ -1,199 +1,65 @@
-📇 Business Card Management API
-📌 Overview
+# Business Card Management API
 
-This project is a backend training assignment focused on building a clean and structured RESTful API using modern .NET technologies.
+RESTful API built with **.NET 10** and **SQL Server** for managing business cards.
 
-The system manages business cards using .NET 10 Web API and SQL Server, following a layered architecture with validation, proper HTTP status codes, seeded data, and OpenAPI documentation rendered using Scalar UI.
+---
 
-🎯 Objectives Covered
+## Features
 
-Build RESTful APIs using ASP.NET Core
+- CRUD operations for business cards
+- SQL Server (Code First) with seeded data
+- Basic validation (required fields, valid email)
+- Proper HTTP status codes
+- Layered architecture (Controllers, Services, Data, Models)
+- OpenAPI documentation via Scalar UI
 
-Integrate SQL Server with Entity Framework Core
+---
 
-Apply validation and structured error handling
+## Tech Stack
 
-Follow layered architecture principles
+- **Backend:** .NET 10, ASP.NET Core Web API  
+- **Database:** SQL Server, Entity Framework Core  
+- **API Docs:** OpenAPI + Scalar  
+- **Version Control:** Git & GitHub 
 
-Return proper HTTP status codes
 
-Document APIs using OpenAPI
+---
 
-✅ Implemented Features
-🧾 Business Card Entity
+## Database Setup
 
-The application manages business cards with the following fields:
+1. Update the connection string in `appsettings.json`:
 
-Name
-
-Gender
-
-Date of Birth
-
-Email
-
-Phone
-
-Address
-
-🔄 CRUD Operations
-
-Create business card
-
-Get all business cards
-
-Get business card by ID
-
-Update business card
-
-Delete business card
-
-All endpoints return appropriate HTTP status codes.
-
-🗄️ Database
-
-SQL Server
-
-Entity Framework Core (Code First)
-
-Migrations enabled
-
-Seeded initial data
-
-Running database update will:
-
-Create the database
-
-Apply migrations
-
-Insert seeded records automatically
-
-✔️ Validation
-
-Validation is implemented using Data Annotations:
-
-Required fields
-
-Valid email format
-
-Invalid requests return 400 BadRequest.
-
-📚 API Documentation (OpenAPI + Scalar)
-
-The project uses OpenAPI to generate API documentation and Scalar as the interactive UI.
-
-After running the application, Scalar UI is available at:
-
-https://localhost:{port}/scalar
-
-Scalar allows:
-
-Viewing all endpoints
-
-Testing API requests
-
-Inspecting request and response schemas
-
-🏗️ Project Structure
-BusinessCardProject
-│
-├── Controllers
-├── Services
-├── Data
-├── Models
-Layer Responsibilities
-
-Controllers → Handle HTTP requests and responses
-
-Services → Contain business logic
-
-Data → DbContext and database configuration
-
-Models → Entity definitions
-
-This layered structure improves maintainability and separation of concerns.
-
-🛠️ Technologies Used
-
-.NET 10
-
-ASP.NET Core Web API
-
-SQL Server
-
-Entity Framework Core
-
-OpenAPI
-
-Scalar UI
-
-Git & GitHub
-
-▶️ How to Run the Project
-1️⃣ Clone the Repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-2️⃣ Configure Database
-
-Update appsettings.json:
-
-"ConnectionStrings": {
-  "DefaultConnection": "Server=.;Database=BusinessCardDb;Trusted_Connection=True;TrustServerCertificate=True;"
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=.;Database=BusinessCardDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  }
 }
 
-Make sure SQL Server is running.
+update the database:
 
-3️⃣ Apply Migrations & Create Database
-dotnet ef database update
+This will create the database and insert seeded data.
 
-This will:
+Running the Application
 
-Create the database
-
-Apply migrations
-
-Insert seeded data
-
-4️⃣ Run the Application
-dotnet run
-
-Then open:
+Open Scalar UI to test endpoints:
 
 https://localhost:{port}/scalar
-📡 API Endpoints
+API Endpoints
 Method	Endpoint	Description
-GET	/api/businesscards	Get all cards
-GET	/api/businesscards/{id}	Get card by ID
-POST	/api/businesscards	Create card
-PUT	/api/businesscards/{id}	Update card
-DELETE	/api/businesscards/{id}	Delete card
-🔒 HTTP Status Codes Used
+GET	/api/businesscards	Get all business cards
+GET	/api/businesscards/{id}	Get a business card by ID
+POST	/api/businesscards	Create a new business card
+PUT	/api/businesscards/{id}	Update a business card
+DELETE	/api/businesscards/{id}	Delete a business card
+HTTP Status Codes
 
-200 OK
+200 OK – Successful request
 
-201 Created
+201 Created – Resource created
 
-400 Bad Request
+400 Bad Request – Validation failed
 
-404 Not Found
+404 Not Found – Resource not found
 
-500 Internal Server Error
-
-📈 Future Enhancements
-
-Angular frontend
-
-Pagination
-
-Filtering
-
-CSV import/export
-
-Photo upload
-
-Unit testing
-
-👨‍💻 Author
-
-Hussam Khaled
-
-If you want, I can refine this further
+500 Internal Server Error – Server error
