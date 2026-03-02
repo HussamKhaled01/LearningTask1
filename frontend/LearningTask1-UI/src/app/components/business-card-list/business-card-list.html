@@ -1,0 +1,42 @@
+<button class="btn export">Export</button>
+<button class="btn import">Import</button>
+<button class="btn add" (click)="createNew()">Add New Card</button>
+
+<div class="table-wrapper">
+  @if(cardsService.cards().length > 0) {
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Gender</th>
+        <th>Date of Birth</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Address</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for(card of cardsService.cards(); track card.id ) {
+      <tr>
+        <td>{{ card.id }}</td>
+        <td>{{ card.name }}</td>
+        <td>{{ card.gender }}</td>
+        <td>{{ card.dob }}</td>
+        <td>{{ card.email }}</td>
+        <td>{{ card.phoneNumber }}</td>
+        <td>{{ card.address }}</td>
+        <td>
+          <button class="btn details" (click)="viewDetails(card.id)">Details</button>
+          <button class="btn update" (click)="edit(card.id)">Edit</button>
+          <button class="btn delete" (click)="delete(card.id)" icon="pi pi-trash">Delete</button>
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+  }
+  @else {
+  <p>No business cards available.</p>
+  }

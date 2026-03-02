@@ -1,0 +1,55 @@
+<div class="task-detail-container">
+    @if (card(); as currentCard) {
+    <div class="card-wrapper">
+        <div class="header">
+            <h1>Business Card No: BC{{currentCard.id}}</h1>
+        </div>
+
+        <div class="task-details-wrapper">
+            <div class="task-details">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <strong>Name</strong>
+                        <p>{{ currentCard.name }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Gender</strong>
+                        <p>{{ currentCard.gender }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Phone Number</strong>
+                        <p>{{ currentCard.phoneNumber }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Email</strong>
+                        <p>{{ currentCard.email }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Date of Birth</strong>
+                        <p>{{ currentCard.dob }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Address</strong>
+                        <p>{{ currentCard.address }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-photo">
+                <img src="https://www.w3schools.com/howto/img_avatar.png" alt="Card Photo">
+            </div>
+        </div>
+
+        <div class="actions">
+            <button (click)="goBack()" class="back-btn">Back to List</button>
+            <button (click)="deleteCard()" class="delete-btn">Delete Card</button>
+        </div>
+    </div>
+    } @else {
+    <div class="not-found">
+        <h2>Card Not Found</h2>
+        <p>The card you're looking for doesn't exist.</p>
+        <button (click)="goBack()">Go Back</button>
+    </div>
+    }
+</div>
