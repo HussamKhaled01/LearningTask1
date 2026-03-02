@@ -25,5 +25,10 @@
                     _pageSize = value;
             }
         }
+
+        public string? SearchTerm { get; set; }
+        public string? Gender { get; set; }
+        public DateOnly? DobFrom { get; set; }
+        public DateOnly? DobTo { get; set; }
     }
 }

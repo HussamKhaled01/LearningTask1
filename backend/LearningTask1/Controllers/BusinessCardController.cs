@@ -42,18 +42,11 @@ namespace LearningTask1.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (file is not null)
-            {
-                if (file.Length > MaxFileSizeBytes)
-                    return BadRequest("File too large. Max 1 MB.");
+            var fileError = ValidateImage(file);
+            if (fileError != null) return BadRequest(fileError);
 
-                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!_permittedExtensions.Contains(ext))
-                    return BadRequest("Invalid file type. Allowed: .jpg, .jpeg, .png, .gif");
-            }
-
-            var CreatedBusinessCard = await service.AddBusinessCardAsync(dto, file);
-            return CreatedAtAction(nameof(GetBusinessCard), new { id = CreatedBusinessCard.Id }, CreatedBusinessCard);
+            var createdCard = await service.AddBusinessCardAsync(dto, file);
+            return CreatedAtAction(nameof(GetBusinessCard), new { id = createdCard.Id }, createdCard);
         }
 
         [HttpPut("{id}")]
@@ -64,39 +57,40 @@ namespace LearningTask1.Controllers
                 return BadRequest(ModelState);
 
             if (id != dto.Id)
-            {
                 return BadRequest("ID mismatch");
-            }
-            if (file is not null)
-            {
-                if (file.Length > MaxFileSizeBytes)
-                    return BadRequest("File too large. Max 1 MB.");
 
-                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!_permittedExtensions.Contains(ext))
-                    return BadRequest("Invalid file type. Allowed: .jpg, .jpeg, .png, .gif");
-            }
+            var fileError = ValidateImage(file);
+            if (fileError != null) return BadRequest(fileError);
 
-            var UpdatedBusinessCard = await service.UpdateBusinessCardAsync(id, dto, file);
-
-            if (UpdatedBusinessCard == false)
-            {
+            var isUpdated = await service.UpdateBusinessCardAsync(id, dto, file);
+            if (!isUpdated) 
                 return NotFound();
-            }
+
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteBusinessCard(int id)
         {
-            var DeletedBusinessCard = await service.DeleteBusinessCardAsync(id);
-
-            if (DeletedBusinessCard == false)
-            {
+            var isDeleted = await service.DeleteBusinessCardAsync(id);
+            if (!isDeleted) 
                 return NotFound();
-            }
-            return NoContent();
 
+            return NoContent();
+        }
+
+        private static string? ValidateImage(IFormFile? file)
+        {
+            if (file is null) return null;
+
+            if (file.Length > MaxFileSizeBytes)
+                return "File too large. Max 1 MB.";
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!_permittedExtensions.Contains(ext))
+                return "Invalid file type. Allowed: .jpg, .jpeg, .png, .gif";
+
+            return null;
         }
     }
 }

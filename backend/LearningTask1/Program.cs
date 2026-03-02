@@ -38,7 +38,17 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
 
-app.UseStaticFiles();
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+if (!System.IO.Directory.Exists(uploadsPath))
+{
+    System.IO.Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
 
 app.UseAuthorization();
 

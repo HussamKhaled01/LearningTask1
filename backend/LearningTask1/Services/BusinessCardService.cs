@@ -28,48 +28,12 @@ namespace LearningTask1.Services
                 Address = dto.Address
             };
 
-            if (file is not null && file.Length > 0)
-            {
-                var uploadsRoot = env.WebRootPath;
-                if (string.IsNullOrEmpty(uploadsRoot))
-                {
-                    uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
-                }
-
-                var uploadsFolder = Path.Combine(uploadsRoot, "uploads");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!_permittedExtensions.Contains(ext))
-                {
-                }
-                else
-                {
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    entity.ImageUrl = $"/uploads/{fileName}";
-                }
-            }
+            entity.ImageUrl = await SaveFileAndGetUrlAsync(file);
 
             context.BusinessCards.Add(entity);
             await context.SaveChangesAsync();
 
-            return new BusinessCardDto
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Gender = entity.Gender,
-                DOB = entity.DOB,
-                Email = entity.Email,
-                PhoneNumber = entity.PhoneNumber,
-                Address = entity.Address
-                , ImageUrl = entity.ImageUrl
-            };
+            return MapToDto(entity);
         }
 
         public async Task<bool> DeleteBusinessCardAsync(int id)
@@ -77,20 +41,8 @@ namespace LearningTask1.Services
             var existingBusinessCard = await context.BusinessCards.FindAsync(id);
             if (existingBusinessCard is null)
                 return false;
-            try
-            {
-                if (!string.IsNullOrEmpty(existingBusinessCard.ImageUrl) && existingBusinessCard.ImageUrl.StartsWith("/uploads/"))
-                {
-                    var uploadsRoot = env.WebRootPath;
-                    if (string.IsNullOrEmpty(uploadsRoot))
-                    {
-                        uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
-                    }
-                    var filePath = Path.Combine(uploadsRoot, existingBusinessCard.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                    if (File.Exists(filePath)) File.Delete(filePath);
-                }
-            }
-            catch { }
+
+            DeleteFileIfExists(existingBusinessCard.ImageUrl);
 
             context.BusinessCards.Remove(existingBusinessCard);
             await context.SaveChangesAsync();
@@ -102,45 +54,48 @@ namespace LearningTask1.Services
             var result = await context.BusinessCards
                 .AsNoTracking()
                 .Where(x => x.Id == id)
-                .Select(x => new BusinessCardDto
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Gender = x.Gender,
-                    DOB = x.DOB,
-                    Email = x.Email,
-                    PhoneNumber = x.PhoneNumber,
-                    Address = x.Address
-                    , ImageUrl = x.ImageUrl
-                })
+                .Select(x => MapToDto(x))
                 .FirstOrDefaultAsync();
 
             return result;
         }
 
-        public async Task<PagedResult<BusinessCardDto>>
-    GetBusinessCardsAsync(PaginationParams pagination)
+        public async Task<PagedResult<BusinessCardDto>> GetBusinessCardsAsync(PaginationParams pagination)
         {
-            var query = context.BusinessCards
-                .AsNoTracking()
-                .OrderBy(x => x.Id);   
+            var query = context.BusinessCards.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(pagination.SearchTerm))
+            {
+                query = query.Where(c => 
+                    c.Name.Contains(pagination.SearchTerm) ||
+                    c.Email.Contains(pagination.SearchTerm) ||
+                    (c.PhoneNumber != null && c.PhoneNumber.Contains(pagination.SearchTerm))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(pagination.Gender))
+            {
+                query = query.Where(c => c.Gender == pagination.Gender);
+            }
+
+            if (pagination.DobFrom.HasValue)
+            {
+                query = query.Where(c => c.DOB >= pagination.DobFrom.Value);
+            }
+
+            if (pagination.DobTo.HasValue)
+            {
+                query = query.Where(c => c.DOB <= pagination.DobTo.Value);
+            }
+
+            query = query.OrderBy(x => x.Id);
 
             var totalCount = await query.CountAsync();
 
             var items = await query
                 .Skip((pagination.PageNumber - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
-                .Select(x => new BusinessCardDto
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Gender = x.Gender,
-                    DOB = x.DOB,
-                    Email = x.Email,
-                    PhoneNumber = x.PhoneNumber,
-                    Address = x.Address
-                    , ImageUrl = x.ImageUrl
-                })
+                .Select(x => MapToDto(x))
                 .ToListAsync();
 
             return new PagedResult<BusinessCardDto>
@@ -151,7 +106,6 @@ namespace LearningTask1.Services
                 TotalCount = totalCount
             };
         }
-
 
         public async Task<bool> UpdateBusinessCardAsync(int id, UpdateBusinessCardDto dto, IFormFile? file = null)
         {
@@ -168,54 +122,91 @@ namespace LearningTask1.Services
             existingBusinessCard.PhoneNumber = dto.PhoneNumber;
             existingBusinessCard.Address = dto.Address;
 
-            // if client supplied external ImageUrl, set it
             if (!string.IsNullOrEmpty(dto.ImageUrl))
             {
                 existingBusinessCard.ImageUrl = dto.ImageUrl;
             }
 
-            // handle uploaded file (replace existing)
             if (file is not null && file.Length > 0)
             {
-                // delete old
-                try
-                {
-                    if (!string.IsNullOrEmpty(existingBusinessCard.ImageUrl) && existingBusinessCard.ImageUrl.StartsWith("/uploads/"))
-                    {
-                        var uploadsRoot = env.WebRootPath;
-                        if (string.IsNullOrEmpty(uploadsRoot))
-                        {
-                            uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
-                        }
-                        var oldPath = Path.Combine(uploadsRoot, existingBusinessCard.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                        if (File.Exists(oldPath)) File.Delete(oldPath);
-                    }
-                }
-                catch { }
-
-                var uploadsRoot2 = env.WebRootPath;
-                if (string.IsNullOrEmpty(uploadsRoot2))
-                {
-                    uploadsRoot2 = Path.Combine(env.ContentRootPath, "wwwroot");
-                }
-                var uploadsFolder = Path.Combine(uploadsRoot2, "uploads");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (_permittedExtensions.Contains(ext))
-                {
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    existingBusinessCard.ImageUrl = $"/uploads/{fileName}";
-                }
+                DeleteFileIfExists(existingBusinessCard.ImageUrl);
+                existingBusinessCard.ImageUrl = await SaveFileAndGetUrlAsync(file);
             }
 
             await context.SaveChangesAsync();
-
             return true;
+        }
+
+        // --- PRIVATE JUNIOR-READABLE HELPERS --- //
+
+        private static BusinessCardDto MapToDto(BusinessCard entity)
+        {
+            return new BusinessCardDto
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Gender = entity.Gender,
+                DOB = entity.DOB,
+                Email = entity.Email,
+                PhoneNumber = entity.PhoneNumber,
+                Address = entity.Address,
+                ImageUrl = entity.ImageUrl
+            };
+        }
+
+        private async Task<string?> SaveFileAndGetUrlAsync(IFormFile? file)
+        {
+            if (file is null || file.Length == 0)
+                return null;
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!_permittedExtensions.Contains(ext))
+                return null; 
+
+            var uploadsFolder = GetUploadsFolderPath();
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return $"/uploads/{fileName}";
+        }
+
+        private void DeleteFileIfExists(string? imageUrl)
+        {
+            if (string.IsNullOrEmpty(imageUrl) || !imageUrl.StartsWith("/uploads/"))
+                return;
+
+            try
+            {
+                var uploadsRoot = GetUploadsFolderPath();
+                var specificFileName = imageUrl.Replace("/uploads/", "");
+                var filePath = Path.Combine(uploadsRoot, specificFileName);
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+            catch 
+            {
+                // Optionally log error
+            }
+        }
+
+        private string GetUploadsFolderPath()
+        {
+            var uploadsRoot = env.WebRootPath;
+            if (string.IsNullOrEmpty(uploadsRoot))
+            {
+                uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
+            }
+            return Path.Combine(uploadsRoot, "uploads");
         }
     }
 }
