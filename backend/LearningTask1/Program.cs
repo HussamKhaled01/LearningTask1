@@ -38,6 +38,8 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
 
+app.UseStaticFiles();
+
 app.UseAuthorization();
 
 app.MapControllers();

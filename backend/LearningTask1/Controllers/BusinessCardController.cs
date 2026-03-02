@@ -4,6 +4,8 @@ using LearningTask1.Models;
 using LearningTask1.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Linq;
 
 namespace LearningTask1.Controllers
 {
@@ -11,6 +13,8 @@ namespace LearningTask1.Controllers
     [ApiController]
     public class BusinessCardController(IBusinessCardService service) : ControllerBase
     {
+        private static readonly string[] _permittedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        private const long MaxFileSizeBytes = 1 * 1024 * 1024; // 1 MB
 
         [HttpGet]
         public async Task<ActionResult<PagedResult<BusinessCardDto>>>GetBusinessCards([FromQuery] PaginationParams pagination)
@@ -32,20 +36,48 @@ namespace LearningTask1.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<BusinessCardDto>> AddBusinessCard(CreateBusinessCardDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<BusinessCardDto>> AddBusinessCard([FromForm] CreateBusinessCardDto dto, IFormFile? file)
         {
-            var CreatedBusinessCard = await service.AddBusinessCardAsync(dto);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (file is not null)
+            {
+                if (file.Length > MaxFileSizeBytes)
+                    return BadRequest("File too large. Max 1 MB.");
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!_permittedExtensions.Contains(ext))
+                    return BadRequest("Invalid file type. Allowed: .jpg, .jpeg, .png, .gif");
+            }
+
+            var CreatedBusinessCard = await service.AddBusinessCardAsync(dto, file);
             return CreatedAtAction(nameof(GetBusinessCard), new { id = CreatedBusinessCard.Id }, CreatedBusinessCard);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateBusinessCard(int id, UpdateBusinessCardDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult> UpdateBusinessCard(int id, [FromForm] UpdateBusinessCardDto dto, IFormFile? file)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             if (id != dto.Id)
             {
                 return BadRequest("ID mismatch");
             }
-            var UpdatedBusinessCard = await service.UpdateBusinessCardAsync(id, dto);
+            if (file is not null)
+            {
+                if (file.Length > MaxFileSizeBytes)
+                    return BadRequest("File too large. Max 1 MB.");
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!_permittedExtensions.Contains(ext))
+                    return BadRequest("Invalid file type. Allowed: .jpg, .jpeg, .png, .gif");
+            }
+
+            var UpdatedBusinessCard = await service.UpdateBusinessCardAsync(id, dto, file);
 
             if (UpdatedBusinessCard == false)
             {

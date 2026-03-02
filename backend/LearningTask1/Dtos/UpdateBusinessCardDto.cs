@@ -10,10 +10,11 @@ namespace LearningTask1.Dtos
         public string? Gender { get; set; }
         public DateOnly DOB { get; set; }
         [Required]
-        [DataType(DataType.EmailAddress)]
+        [EmailAddress]
         public string Email { get; set; }
         [Required]
         public string? PhoneNumber { get; set; }
         public string? Address { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

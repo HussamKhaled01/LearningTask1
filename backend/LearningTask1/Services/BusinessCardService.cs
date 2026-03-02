@@ -5,13 +5,18 @@ using LearningTask1.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace LearningTask1.Services
 {
-    public class BusinessCardService(AppDbContext context) : IBusinessCardService
+    public class BusinessCardService(AppDbContext context, IWebHostEnvironment env) : IBusinessCardService
     {
 
-        public async Task<BusinessCardDto> AddBusinessCardAsync(CreateBusinessCardDto dto)
+        private readonly string[] _permittedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+
+        public async Task<BusinessCardDto> AddBusinessCardAsync(CreateBusinessCardDto dto, IFormFile? file = null)
         {
             var entity = new BusinessCard
             {
@@ -22,6 +27,34 @@ namespace LearningTask1.Services
                 PhoneNumber = dto.PhoneNumber,
                 Address = dto.Address
             };
+
+            if (file is not null && file.Length > 0)
+            {
+                var uploadsRoot = env.WebRootPath;
+                if (string.IsNullOrEmpty(uploadsRoot))
+                {
+                    uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
+                }
+
+                var uploadsFolder = Path.Combine(uploadsRoot, "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!_permittedExtensions.Contains(ext))
+                {
+                }
+                else
+                {
+                    var fileName = $"{Guid.NewGuid()}{ext}";
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    entity.ImageUrl = $"/uploads/{fileName}";
+                }
+            }
 
             context.BusinessCards.Add(entity);
             await context.SaveChangesAsync();
@@ -35,6 +68,7 @@ namespace LearningTask1.Services
                 Email = entity.Email,
                 PhoneNumber = entity.PhoneNumber,
                 Address = entity.Address
+                , ImageUrl = entity.ImageUrl
             };
         }
 
@@ -43,6 +77,20 @@ namespace LearningTask1.Services
             var existingBusinessCard = await context.BusinessCards.FindAsync(id);
             if (existingBusinessCard is null)
                 return false;
+            try
+            {
+                if (!string.IsNullOrEmpty(existingBusinessCard.ImageUrl) && existingBusinessCard.ImageUrl.StartsWith("/uploads/"))
+                {
+                    var uploadsRoot = env.WebRootPath;
+                    if (string.IsNullOrEmpty(uploadsRoot))
+                    {
+                        uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
+                    }
+                    var filePath = Path.Combine(uploadsRoot, existingBusinessCard.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(filePath)) File.Delete(filePath);
+                }
+            }
+            catch { }
 
             context.BusinessCards.Remove(existingBusinessCard);
             await context.SaveChangesAsync();
@@ -63,6 +111,7 @@ namespace LearningTask1.Services
                     Email = x.Email,
                     PhoneNumber = x.PhoneNumber,
                     Address = x.Address
+                    , ImageUrl = x.ImageUrl
                 })
                 .FirstOrDefaultAsync();
 
@@ -74,7 +123,7 @@ namespace LearningTask1.Services
         {
             var query = context.BusinessCards
                 .AsNoTracking()
-                .OrderBy(x => x.Id);   // VERY IMPORTANT for pagination
+                .OrderBy(x => x.Id);   
 
             var totalCount = await query.CountAsync();
 
@@ -90,6 +139,7 @@ namespace LearningTask1.Services
                     Email = x.Email,
                     PhoneNumber = x.PhoneNumber,
                     Address = x.Address
+                    , ImageUrl = x.ImageUrl
                 })
                 .ToListAsync();
 
@@ -103,7 +153,7 @@ namespace LearningTask1.Services
         }
 
 
-        public async Task<bool> UpdateBusinessCardAsync(int id, UpdateBusinessCardDto dto)
+        public async Task<bool> UpdateBusinessCardAsync(int id, UpdateBusinessCardDto dto, IFormFile? file = null)
         {
             var existingBusinessCard = await context.BusinessCards.FindAsync(id);
             if (existingBusinessCard is null)
@@ -117,6 +167,51 @@ namespace LearningTask1.Services
             existingBusinessCard.Email = dto.Email;
             existingBusinessCard.PhoneNumber = dto.PhoneNumber;
             existingBusinessCard.Address = dto.Address;
+
+            // if client supplied external ImageUrl, set it
+            if (!string.IsNullOrEmpty(dto.ImageUrl))
+            {
+                existingBusinessCard.ImageUrl = dto.ImageUrl;
+            }
+
+            // handle uploaded file (replace existing)
+            if (file is not null && file.Length > 0)
+            {
+                // delete old
+                try
+                {
+                    if (!string.IsNullOrEmpty(existingBusinessCard.ImageUrl) && existingBusinessCard.ImageUrl.StartsWith("/uploads/"))
+                    {
+                        var uploadsRoot = env.WebRootPath;
+                        if (string.IsNullOrEmpty(uploadsRoot))
+                        {
+                            uploadsRoot = Path.Combine(env.ContentRootPath, "wwwroot");
+                        }
+                        var oldPath = Path.Combine(uploadsRoot, existingBusinessCard.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                        if (File.Exists(oldPath)) File.Delete(oldPath);
+                    }
+                }
+                catch { }
+
+                var uploadsRoot2 = env.WebRootPath;
+                if (string.IsNullOrEmpty(uploadsRoot2))
+                {
+                    uploadsRoot2 = Path.Combine(env.ContentRootPath, "wwwroot");
+                }
+                var uploadsFolder = Path.Combine(uploadsRoot2, "uploads");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (_permittedExtensions.Contains(ext))
+                {
+                    var fileName = $"{Guid.NewGuid()}{ext}";
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    existingBusinessCard.ImageUrl = $"/uploads/{fileName}";
+                }
+            }
 
             await context.SaveChangesAsync();
 

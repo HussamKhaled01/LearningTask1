@@ -8,8 +8,8 @@ namespace LearningTask1.Services
     {
         Task<PagedResult<BusinessCardDto>> GetBusinessCardsAsync(PaginationParams pagination);
         Task<BusinessCardDto?> GetBusinessCardByIdAsync(int id);
-        Task<BusinessCardDto> AddBusinessCardAsync(CreateBusinessCardDto dto);
-        Task<bool> UpdateBusinessCardAsync(int id, UpdateBusinessCardDto dto);
+        Task<BusinessCardDto> AddBusinessCardAsync(CreateBusinessCardDto dto, IFormFile? file = null);
+        Task<bool> UpdateBusinessCardAsync(int id, UpdateBusinessCardDto dto, IFormFile? file = null);
         Task<bool> DeleteBusinessCardAsync(int id);
     }
 }
