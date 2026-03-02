@@ -1,4 +1,5 @@
 ﻿using LearningTask1.Dtos;
+using LearningTask1.Helpers;
 using LearningTask1.Models;
 using LearningTask1.Services;
 using Microsoft.AspNetCore.Http;
@@ -11,30 +12,27 @@ namespace LearningTask1.Controllers
     public class BusinessCardController(IBusinessCardService service) : ControllerBase
     {
 
-
-        
-
         [HttpGet]
-        public async Task<ActionResult<List<BusinessCard>>> GetBusinessCards()
+        public async Task<ActionResult<PagedResult<BusinessCardDto>>>GetBusinessCards([FromQuery] PaginationParams pagination)
         {
-            var cards = await service.GetAllBusinessCardsAsync();
-            return Ok(cards); 
+            var result = await service.GetBusinessCardsAsync(pagination);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<BusinessCard>> GetBusinessCard(int id)
+        public async Task<ActionResult<BusinessCardDto>> GetBusinessCard(int id)
         {
             var businessCard = await service.GetBusinessCardByIdAsync(id);
 
             if (businessCard is null)
             {
-                return NotFound("Business Card with the gives id was not found");
+                return NotFound("Business Card with the given id was not found");
             }
             return Ok(businessCard);
         }
 
         [HttpPost]
-        public async Task<ActionResult<BusinessCard>> AddBusinessCard(CreateBusinessCardDto dto)
+        public async Task<ActionResult<BusinessCardDto>> AddBusinessCard(CreateBusinessCardDto dto)
         {
             var CreatedBusinessCard = await service.AddBusinessCardAsync(dto);
             return CreatedAtAction(nameof(GetBusinessCard), new { id = CreatedBusinessCard.Id }, CreatedBusinessCard);
