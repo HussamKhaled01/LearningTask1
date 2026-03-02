@@ -4,6 +4,14 @@ import { Observable, tap } from 'rxjs';
 
 
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface BusinessCard {
   id: number;
   name: string;
@@ -12,6 +20,16 @@ export interface BusinessCard {
   email: string;
   phoneNumber: string;
   address: string;
+  imageUrl?: string;
+}
+
+export interface CardFilters {
+  searchTerm: string;
+  gender: string;
+  dobFrom: string;
+  dobTo: string;
+  pageNumber: number;
+  pageSize: number;
 }
 
 @Injectable({
@@ -23,11 +41,48 @@ export class BusinessCardService {
   private cardsSignal = signal<BusinessCard[]>([]);
   cards = this.cardsSignal.asReadonly();
 
+  private paginationSignal = signal<Omit<PaginatedResponse<BusinessCard>, 'data'>>({
+    pageNumber: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0
+  });
+  pagination = this.paginationSignal.asReadonly();
+
+  private filterSignal = signal<CardFilters>({
+    searchTerm: '',
+    gender: '',
+    dobFrom: '',
+    dobTo: '',
+    pageNumber: 1,
+    pageSize: 10
+  });
+  filters = this.filterSignal.asReadonly();
+
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<BusinessCard[]> {
-    return this.http.get<BusinessCard[]>(this.apiUrl).pipe(
-      tap(data => this.cardsSignal.set(data))
+  updateFilters(newFilters: Partial<CardFilters>) {
+    this.filterSignal.update(current => ({ ...current, ...newFilters }));
+  }
+
+  loadCards(): Observable<PaginatedResponse<BusinessCard>> {
+    const f = this.filterSignal();
+    let url = `${this.apiUrl}?pageNumber=${f.pageNumber}&pageSize=${f.pageSize}`;
+    if (f.searchTerm) url += `&searchTerm=${encodeURIComponent(f.searchTerm)}`;
+    if (f.gender) url += `&gender=${encodeURIComponent(f.gender)}`;
+    if (f.dobFrom) url += `&dobFrom=${encodeURIComponent(f.dobFrom)}`;
+    if (f.dobTo) url += `&dobTo=${encodeURIComponent(f.dobTo)}`;
+
+    return this.http.get<PaginatedResponse<BusinessCard>>(url).pipe(
+      tap(response => {
+        this.cardsSignal.set(response.data);
+        this.paginationSignal.set({
+          pageNumber: response.pageNumber,
+          pageSize: response.pageSize,
+          totalCount: response.totalCount,
+          totalPages: response.totalPages
+        });
+      })
     );
   }
 

@@ -36,7 +36,8 @@
             </div>
 
             <div class="card-photo">
-                <img src="https://www.w3schools.com/howto/img_avatar.png" alt="Card Photo">
+                <img [src]="currentCard.imageUrl ? 'https://localhost:7193' + currentCard.imageUrl : 'https://www.w3schools.com/howto/img_avatar.png'"
+                    alt="Card Photo">
             </div>
         </div>
 

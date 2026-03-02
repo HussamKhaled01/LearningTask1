@@ -14,21 +14,60 @@ export class BusinessCardList implements OnInit {
   cardsService = inject(BusinessCardService);
   router = inject(Router);
 
- businessCardsSignal = signal<BusinessCard[]>([]);
+  pendingFilters = signal({
+    searchTerm: '',
+    gender: '',
+    dobFrom: '',
+    dobTo: ''
+  });
 
   ngOnInit(): void {
+    const currentFilters = this.cardsService.filters();
+    this.pendingFilters.set({
+      searchTerm: currentFilters.searchTerm,
+      gender: currentFilters.gender,
+      dobFrom: currentFilters.dobFrom,
+      dobTo: currentFilters.dobTo
+    });
     this.loadAll();
   }
 
   loadAll(): void {
-    this.cardsService.getAll().subscribe({
-      next: (data) => {
-        this.businessCardsSignal.set(data); 
+    this.cardsService.loadCards().subscribe({
+      next: () => {
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Load error:', err);
       }
     });
+  }
+
+  changePage(newPageNumber: number): void {
+    const currentPagination = this.cardsService.pagination();
+    if (newPageNumber >= 1 && newPageNumber <= currentPagination.totalPages) {
+      this.cardsService.updateFilters({ pageNumber: newPageNumber });
+      this.loadAll();
+    }
+  }
+
+  onPageSizeChange(event: Event): void {
+    const newSize = parseInt((event.target as HTMLSelectElement).value, 10);
+    this.cardsService.updateFilters({ pageSize: newSize, pageNumber: 1 });
+    this.loadAll();
+  }
+
+  onFilterInput(event: Event, filterType: 'searchTerm' | 'gender' | 'dobFrom' | 'dobTo'): void {
+    const target = event.target as any;
+    const value = target?.value || '';
+    this.pendingFilters.update(current => ({ ...current, [filterType]: value }));
+  }
+
+  applyFilters(): void {
+    this.cardsService.updateFilters({
+      ...this.pendingFilters(),
+      pageNumber: 1
+    });
+    this.loadAll();
   }
 
   createNew(): void {
@@ -48,8 +87,7 @@ export class BusinessCardList implements OnInit {
 
     this.cardsService.delete(id).subscribe({
       next: () => {
-        this.businessCardsSignal.update(cards => cards.filter(c => c.id !== id));
-        this.ngOnInit();
+        this.loadAll();
       },
       error: (err) => {
         console.error('Delete error:', err);

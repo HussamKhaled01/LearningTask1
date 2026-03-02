@@ -1,7 +1,46 @@
-<button class="btn export">Export</button>
-<button class="btn import">Import</button>
-<button class="btn add" (click)="createNew()">Add New Card</button>
+<div class="filter-panel">
+  <div class="filter-panel-content">
+    <div class="search-container">
+      <label class="filter-label">Search</label>
+      <div class="input-container">
+        <input type="text" placeholder="Name, Email, Phone..." (input)="onFilterInput($event, 'searchTerm')"
+          [value]="pendingFilters().searchTerm" class="form-control search-input compact-input">
+      </div>
+    </div>
 
+    <div class="filter-group">
+      <label class="filter-label">Gender</label>
+      <select (change)="onFilterInput($event, 'gender')" [value]="pendingFilters().gender"
+        class="form-control gender-select compact-input">
+        <option value="">All</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">DOB From</label>
+      <input type="date" (change)="onFilterInput($event, 'dobFrom')" [value]="pendingFilters().dobFrom"
+        class="form-control compact-input">
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">DOB To</label>
+      <input type="date" (change)="onFilterInput($event, 'dobTo')" [value]="pendingFilters().dobTo"
+        class="form-control compact-input">
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn apply compact-btn" (click)="applyFilters()">Apply Filters</button>
+    </div>
+
+    <div class="header-buttons">
+      <button class="btn export compact-btn">Export</button>
+      <button class="btn import compact-btn">Import</button>
+      <button class="btn add compact-btn" (click)="createNew()">Add New Card</button>
+    </div>
+  </div>
+</div>
 <div class="table-wrapper">
   @if(cardsService.cards().length > 0) {
   <table>
@@ -14,7 +53,7 @@
         <th>Email</th>
         <th>Phone</th>
         <th>Address</th>
-        <th>Actions</th>
+        <th class="actions-header">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -27,16 +66,69 @@
         <td>{{ card.email }}</td>
         <td>{{ card.phoneNumber }}</td>
         <td>{{ card.address }}</td>
-        <td>
-          <button class="btn details" (click)="viewDetails(card.id)">Details</button>
-          <button class="btn update" (click)="edit(card.id)">Edit</button>
-          <button class="btn delete" (click)="delete(card.id)" icon="pi pi-trash">Delete</button>
+        <td class="actions-cell">
+          <div class="dropdown">
+            <button class="dropbtn">Options ▼</button>
+            <div class="dropdown-content">
+              <button (click)="viewDetails(card.id)">View Details</button>
+              <button (click)="edit(card.id)">Edit Record</button>
+              <button class="delete" (click)="delete(card.id)">Delete</button>
+            </div>
+          </div>
         </td>
       </tr>
       }
     </tbody>
   </table>
+
+  <div class="pagination-container">
+    <div class="pagination-summary">
+      <span class="stat">
+        <strong>{{ cardsService.pagination().totalCount }}</strong>
+        Records
+      </span>
+
+      <span class="pagination-divider"></span>
+
+      <span class="stat">
+        <strong>{{ cardsService.pagination().totalPages }}</strong>
+        Pages
+      </span>
+    </div>
+
+    <div class="pagination-center">
+      <button class="btn pagination-btn" [disabled]="cardsService.pagination().pageNumber === 1"
+        (click)="changePage(cardsService.pagination().pageNumber - 1)">
+        ←
+      </button>
+
+      <div class="page-indicator">
+        Page
+        <strong>{{ cardsService.pagination().pageNumber }}</strong>
+        of
+        <strong>{{ cardsService.pagination().totalPages }}</strong>
+      </div>
+
+      <button class="btn pagination-btn"
+        [disabled]="cardsService.pagination().pageNumber === cardsService.pagination().totalPages"
+        (click)="changePage(cardsService.pagination().pageNumber + 1)">
+        →
+      </button>
+    </div>
+
+    <div class="page-size">
+      <label for="pageSize" class="rows-label">Rows</label>
+      <select id="pageSize" (change)="onPageSizeChange($event)" [value]="cardsService.pagination().pageSize">
+        <option value="10">10</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+  </div>
+
   }
   @else {
   <p>No business cards available.</p>
   }
+</div>
