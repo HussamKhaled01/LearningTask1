@@ -33,17 +33,18 @@
                         <p>{{ currentCard.address }}</p>
                     </div>
                 </div>
+
+                <div class="actions"
+                    style="margin-top: 24px; border-top: 1px solid hsl(214.3 31.8% 91.4%); padding-top: 24px;">
+                    <button (click)="goBack()" class="back-btn">Back to List</button>
+                    <button (click)="deleteCard()" class="delete-btn">Delete Card</button>
+                </div>
             </div>
 
             <div class="card-photo">
                 <img [src]="currentCard.imageUrl ? 'https://localhost:7193' + currentCard.imageUrl : 'https://www.w3schools.com/howto/img_avatar.png'"
                     alt="Card Photo">
             </div>
-        </div>
-
-        <div class="actions">
-            <button (click)="goBack()" class="back-btn">Back to List</button>
-            <button (click)="deleteCard()" class="delete-btn">Delete Card</button>
         </div>
     </div>
     } @else {

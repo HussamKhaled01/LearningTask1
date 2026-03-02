@@ -95,8 +95,16 @@ export class BusinessCardService {
     return this.http.post<BusinessCard>(this.apiUrl, card);
   }
 
+  createWithFormData(formData: FormData): Observable<BusinessCard> {
+    return this.http.post<BusinessCard>(this.apiUrl, formData);
+  }
+
   update(id: number, card: BusinessCard): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}`, card);
+  }
+
+  updateWithFormData(id: number, formData: FormData): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, formData);
   }
 
   delete(id: number): Observable<void> {

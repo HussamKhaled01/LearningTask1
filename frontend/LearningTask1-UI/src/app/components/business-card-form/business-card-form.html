@@ -1,0 +1,143 @@
+<div class="task-detail-container">
+    <div class="card-wrapper">
+        <div class="header">
+            <h1>{{ isEditMode ? 'Edit Business Card' : 'Add New Business Card' }}</h1>
+        </div>
+
+        @if (serverErrors.length > 0) {
+        <div class="server-error-container">
+            <strong>Please correct the following errors:</strong>
+            <ul>
+                @for (error of serverErrors; track error) {
+                <li>{{ error }}</li>
+                }
+            </ul>
+        </div>
+        }
+
+        @if (!isConfirming) {
+        <form [formGroup]="cardForm" (ngSubmit)="onSubmit()" class="task-details-wrapper">
+            <div class="task-details">
+                <div class="details-grid">
+                    <div class="detail-item form-group">
+                        <label for="name"><strong>Name *</strong></label>
+                        <input id="name" type="text" formControlName="name" class="form-control" placeholder="John Doe">
+                        @if (cardForm.get('name')?.invalid && cardForm.get('name')?.touched) {
+                        <span class="validation-error">Name is required.</span>
+                        }
+                    </div>
+
+                    <div class="detail-item form-group">
+                        <label for="gender"><strong>Gender</strong></label>
+                        <select id="gender" formControlName="gender" class="form-control">
+                            <option value="">Select...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="detail-item form-group">
+                        <label for="phoneNumber"><strong>Phone Number *</strong></label>
+                        <input id="phoneNumber" type="text" formControlName="phoneNumber" class="form-control"
+                            placeholder="+123456789">
+                        @if (cardForm.get('phoneNumber')?.invalid && cardForm.get('phoneNumber')?.touched) {
+                        <span class="validation-error">Phone Number is required.</span>
+                        }
+                    </div>
+
+                    <div class="detail-item form-group">
+                        <label for="email"><strong>Email *</strong></label>
+                        <input id="email" type="email" formControlName="email" class="form-control"
+                            placeholder="john@example.com">
+                        @if (cardForm.get('email')?.hasError('required') && cardForm.get('email')?.touched) {
+                        <span class="validation-error">Email is required.</span>
+                        }
+                        @if (cardForm.get('email')?.hasError('email') && cardForm.get('email')?.touched) {
+                        <span class="validation-error">Please enter a valid email.</span>
+                        }
+                    </div>
+
+                    <div class="detail-item form-group">
+                        <label for="dob"><strong>Date of Birth *</strong></label>
+                        <input id="dob" type="date" formControlName="dob" class="form-control">
+                        @if (cardForm.get('dob')?.invalid && cardForm.get('dob')?.touched) {
+                        <span class="validation-error">Date of Birth is required.</span>
+                        }
+                    </div>
+
+                    <div class="detail-item form-group">
+                        <label for="address"><strong>Address</strong></label>
+                        <input id="address" type="text" formControlName="address" class="form-control"
+                            placeholder="123 Main St">
+                    </div>
+
+                    <div class="detail-item form-group image-upload-group">
+                        <label for="image"><strong>Business Card Photo</strong></label>
+                        <input id="image" type="file" (change)="onFileSelected($event)" accept=".jpg,.jpeg,.png,.gif"
+                            class="form-control file-input">
+                    </div>
+                </div>
+
+                <div class="actions"
+                    style="margin-top: 24px; border-top: 1px solid hsl(214.3 31.8% 91.4%); padding-top: 24px;">
+                    <button type="button" (click)="cancel()" class="back-btn" [disabled]="isSubmitting">Cancel</button>
+                    <button type="submit" class="save-btn" [disabled]="isSubmitting">
+                        {{ isEditMode ? 'Review Details' : 'Review Details' }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-photo">
+                <img [src]="previewUrl ? previewUrl : (existingImageUrl ? 'https://localhost:7193' + existingImageUrl : 'https://www.w3schools.com/howto/img_avatar.png')"
+                    alt="Card Photo Preview">
+            </div>
+        </form>
+        } @else {
+        
+        <div class="task-details-wrapper">
+            <div class="task-details">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <strong>Name</strong>
+                        <p>{{ cardForm.get('name')?.value || '-' }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Gender</strong>
+                        <p>{{ cardForm.get('gender')?.value || '-' }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Phone Number</strong>
+                        <p>{{ cardForm.get('phoneNumber')?.value || '-' }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Email</strong>
+                        <p>{{ cardForm.get('email')?.value || '-' }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Date of Birth</strong>
+                        <p>{{ cardForm.get('dob')?.value || '-' }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Address</strong>
+                        <p>{{ cardForm.get('address')?.value || '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="actions"
+                    style="margin-top: 24px; border-top: 1px solid hsl(214.3 31.8% 91.4%); padding-top: 24px;">
+                    <button type="button" (click)="editCurrent()" class="back-btn"
+                        [disabled]="isSubmitting">Edit</button>
+                    <button type="button" (click)="confirmSave()" class="confirm-btn" [disabled]="isSubmitting">
+                        {{ isSubmitting ? 'Saving...' : 'Confirm & Save' }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-photo">
+                <img [src]="previewUrl ? previewUrl : (existingImageUrl ? 'https://localhost:7193' + existingImageUrl : 'https://www.w3schools.com/howto/img_avatar.png')"
+                    alt="Card Photo">
+            </div>
+        </div>
+        }
+    </div>
+</div>

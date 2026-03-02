@@ -5,6 +5,13 @@
     font-family: 'Inter', sans-serif;
 }
 
+.card-wrapper {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid hsl(214.3 31.8% 91.4%);
+    padding: 24px;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -27,13 +34,13 @@
 .task-details-wrapper {
     display: flex;
     gap: 32px;
-    /* space between details and photo */
+    
     align-items: flex-start;
 }
 
 .task-details {
     flex: 1;
-    /* takes remaining space */
+    
     background: hsl(0 0% 100%);
     border: 1px solid hsl(214.3 31.8% 91.4%);
     padding: 32px;
@@ -68,7 +75,7 @@
     height: 250px;
     border-radius: 12px;
     background: hsl(214.3 31.8% 91.4%);
-    /* placeholder if no image */
+    
     flex-shrink: 0;
 }
 
