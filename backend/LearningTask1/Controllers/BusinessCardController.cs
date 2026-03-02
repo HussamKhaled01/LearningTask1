@@ -12,9 +12,14 @@ namespace LearningTask1.Controllers
     {
 
 
+        
+
         [HttpGet]
         public async Task<ActionResult<List<BusinessCard>>> GetBusinessCards()
-            => Ok(await service.GetAllBusinessCardsAsync());
+        {
+            var cards = await service.GetAllBusinessCardsAsync();
+            return Ok(cards); 
+        }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<BusinessCard>> GetBusinessCard(int id)
