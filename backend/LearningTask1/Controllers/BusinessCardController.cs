@@ -23,6 +23,37 @@ namespace LearningTask1.Controllers
             return Ok(result);
         }
 
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportData([FromQuery] PaginationParams pagination, [FromQuery] string format = "csv")
+        {
+            try
+            {
+                var fileContent = await service.ExportBusinessCardsAsync(pagination, format);
+                var contentType = format.ToLower() == "xml" ? "application/xml" : "text/csv";
+                var fileExtension = format.ToLower() == "xml" ? "xml" : "csv";
+                return File(fileContent, contentType, $"BusinessCardsExport.{fileExtension}");
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("import")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> ImportData(IFormFile file)
+        {
+            try
+            {
+                var count = await service.ImportBusinessCardsAsync(file);
+                return Ok(new { Message = $"Successfully imported {count} business cards." });
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<BusinessCardDto>> GetBusinessCard(int id)
         {

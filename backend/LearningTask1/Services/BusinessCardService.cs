@@ -8,7 +8,10 @@ using System.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-
+using System.Globalization;
+using System.Xml.Serialization;
+using CsvHelper;
+using CsvHelper.Configuration;
 namespace LearningTask1.Services
 {
     public class BusinessCardService(AppDbContext context, IWebHostEnvironment env) : IBusinessCardService
@@ -47,6 +50,101 @@ namespace LearningTask1.Services
             context.BusinessCards.Remove(existingBusinessCard);
             await context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<byte[]> ExportBusinessCardsAsync(PaginationParams pagination, string format)
+        {
+            var query = context.BusinessCards.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(pagination.SearchTerm))
+            {
+                query = query.Where(c => 
+                    c.Name.Contains(pagination.SearchTerm) ||
+                    c.Email.Contains(pagination.SearchTerm) ||
+                    (c.PhoneNumber != null && c.PhoneNumber.Contains(pagination.SearchTerm))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(pagination.Gender))
+                query = query.Where(c => c.Gender == pagination.Gender);
+
+            if (pagination.DobFrom.HasValue)
+                query = query.Where(c => c.DOB >= pagination.DobFrom.Value);
+
+            if (pagination.DobTo.HasValue)
+                query = query.Where(c => c.DOB <= pagination.DobTo.Value);
+
+            query = query.OrderBy(x => x.Id);
+            var items = await query.Select(x => MapToDto(x)).ToListAsync();
+
+            using var memoryStream = new MemoryStream();
+
+            if (format.Equals("csv", StringComparison.OrdinalIgnoreCase))
+            {
+                using var writer = new StreamWriter(memoryStream, leaveOpen: true);
+                using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                await csv.WriteRecordsAsync(items);
+                await writer.FlushAsync();
+            }
+            else if (format.Equals("xml", StringComparison.OrdinalIgnoreCase))
+            {
+                var serializer = new XmlSerializer(typeof(System.Collections.Generic.List<BusinessCardDto>));
+                serializer.Serialize(memoryStream, items);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid export format. Supported formats are 'csv' and 'xml'.");
+            }
+
+            memoryStream.Position = 0;
+            return memoryStream.ToArray();
+        }
+
+        public async Task<int> ImportBusinessCardsAsync(IFormFile file)
+        {
+            if (file == null || file.Length == 0) return 0;
+
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            var importedCards = new System.Collections.Generic.List<BusinessCard>();
+
+            using var stream = file.OpenReadStream();
+
+            if (ext == ".csv")
+            {
+                using var reader = new StreamReader(stream);
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture) { HeaderValidated = null, MissingFieldFound = null };
+                using var csv = new CsvReader(reader, config);
+                var dtos = csv.GetRecords<BusinessCardDto>().ToList();
+                foreach(var dto in dtos) {
+                    importedCards.Add(new BusinessCard {
+                        Name = dto.Name, Gender = dto.Gender, DOB = dto.DOB, Email = dto.Email, PhoneNumber = dto.PhoneNumber, Address = dto.Address, ImageUrl = dto.ImageUrl
+                    });
+                }
+            }
+            else if (ext == ".xml")
+            {
+                var serializer = new XmlSerializer(typeof(System.Collections.Generic.List<BusinessCardDto>));
+                if (serializer.Deserialize(stream) is System.Collections.Generic.List<BusinessCardDto> dtos)
+                {
+                    foreach(var dto in dtos) {
+                        importedCards.Add(new BusinessCard {
+                            Name = dto.Name, Gender = dto.Gender, DOB = dto.DOB, Email = dto.Email, PhoneNumber = dto.PhoneNumber, Address = dto.Address, ImageUrl = dto.ImageUrl
+                        });
+                    }
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Invalid file type. Only .csv and .xml are supported.");
+            }
+
+            if (importedCards.Any())
+            {
+                await context.BusinessCards.AddRangeAsync(importedCards);
+                await context.SaveChangesAsync();
+            }
+
+            return importedCards.Count;
         }
 
         public async Task<BusinessCardDto?> GetBusinessCardByIdAsync(int id)

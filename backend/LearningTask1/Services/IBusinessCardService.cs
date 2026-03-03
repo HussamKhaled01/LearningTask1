@@ -11,5 +11,7 @@ namespace LearningTask1.Services
         Task<BusinessCardDto> AddBusinessCardAsync(CreateBusinessCardDto dto, IFormFile? file = null);
         Task<bool> UpdateBusinessCardAsync(int id, UpdateBusinessCardDto dto, IFormFile? file = null);
         Task<bool> DeleteBusinessCardAsync(int id);
+        Task<byte[]> ExportBusinessCardsAsync(PaginationParams pagination, string format);
+        Task<int> ImportBusinessCardsAsync(IFormFile file);
     }
 }
