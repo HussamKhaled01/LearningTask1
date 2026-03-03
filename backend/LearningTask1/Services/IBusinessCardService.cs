@@ -1,6 +1,5 @@
 ﻿using LearningTask1.Dtos;
 using LearningTask1.Helpers;
-using LearningTask1.Models;
 
 namespace LearningTask1.Services
 {

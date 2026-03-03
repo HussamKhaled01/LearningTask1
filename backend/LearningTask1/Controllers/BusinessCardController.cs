@@ -1,11 +1,8 @@
 ﻿using LearningTask1.Dtos;
 using LearningTask1.Helpers;
-using LearningTask1.Models;
 using LearningTask1.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
-using System.Linq;
+
 
 namespace LearningTask1.Controllers
 {
@@ -14,7 +11,7 @@ namespace LearningTask1.Controllers
     public class BusinessCardController(IBusinessCardService service) : ControllerBase
     {
         private static readonly string[] _permittedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        private const long MaxFileSizeBytes = 1 * 1024 * 1024; // 1 MB
+        private const long MaxFileSizeBytes = 1 * 1024 * 1024;
 
         [HttpGet]
         public async Task<ActionResult<PagedResult<BusinessCardDto>>>GetBusinessCards([FromQuery] PaginationParams pagination)
@@ -26,32 +23,18 @@ namespace LearningTask1.Controllers
         [HttpGet("export")]
         public async Task<IActionResult> ExportData([FromQuery] PaginationParams pagination, [FromQuery] string format = "csv")
         {
-            try
-            {
-                var fileContent = await service.ExportBusinessCardsAsync(pagination, format);
-                var contentType = format.ToLower() == "xml" ? "application/xml" : "text/csv";
-                var fileExtension = format.ToLower() == "xml" ? "xml" : "csv";
-                return File(fileContent, contentType, $"BusinessCardsExport.{fileExtension}");
-            }
-            catch (System.Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var fileContent = await service.ExportBusinessCardsAsync(pagination, format);
+            var contentType = format.ToLower() == "xml" ? "application/xml" : "text/csv";
+            var fileExtension = format.ToLower() == "xml" ? "xml" : "csv";
+            return File(fileContent, contentType, $"BusinessCardsExport.{fileExtension}");
         }
 
         [HttpPost("import")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> ImportData(IFormFile file)
         {
-            try
-            {
-                var count = await service.ImportBusinessCardsAsync(file);
-                return Ok(new { Message = $"Successfully imported {count} business cards." });
-            }
-            catch (System.Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var count = await service.ImportBusinessCardsAsync(file);
+            return Ok(new { Message = $"Successfully imported {count} business cards." });
         }
 
         [HttpGet("{id}")]

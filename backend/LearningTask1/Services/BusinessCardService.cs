@@ -3,11 +3,6 @@ using LearningTask1.Dtos;
 using LearningTask1.Helpers;
 using LearningTask1.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using System.IO;
 using System.Globalization;
 using System.Xml.Serialization;
 using CsvHelper;
@@ -235,7 +230,7 @@ namespace LearningTask1.Services
             return true;
         }
 
-        // --- PRIVATE JUNIOR-READABLE HELPERS --- //
+
 
         private static BusinessCardDto MapToDto(BusinessCard entity)
         {
@@ -280,20 +275,13 @@ namespace LearningTask1.Services
             if (string.IsNullOrEmpty(imageUrl) || !imageUrl.StartsWith("/uploads/"))
                 return;
 
-            try
-            {
-                var uploadsRoot = GetUploadsFolderPath();
-                var specificFileName = imageUrl.Replace("/uploads/", "");
-                var filePath = Path.Combine(uploadsRoot, specificFileName);
+            var uploadsRoot = GetUploadsFolderPath();
+            var specificFileName = imageUrl.Replace("/uploads/", "");
+            var filePath = Path.Combine(uploadsRoot, specificFileName);
 
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
-            }
-            catch 
+            if (File.Exists(filePath))
             {
-                // Optionally log error
+                File.Delete(filePath);
             }
         }
 

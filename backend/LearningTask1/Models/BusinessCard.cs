@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿
 namespace LearningTask1.Models
 {
     public class BusinessCard
