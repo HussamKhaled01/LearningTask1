@@ -113,7 +113,6 @@ export class BusinessCardService {
 
   exportData(format: 'csv' | 'xml'): Observable<Blob> {
     const f = this.filterSignal();
-    // Use a large pageSize since we likely want to export all filtered records, not just one page
     let url = `${this.apiUrl}/export?format=${format}&pageNumber=1&pageSize=1000000`;
     if (f.searchTerm) url += `&searchTerm=${encodeURIComponent(f.searchTerm)}`;
     if (f.gender) url += `&gender=${encodeURIComponent(f.gender)}`;

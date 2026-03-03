@@ -70,6 +70,16 @@ export class BusinessCardList implements OnInit {
     this.loadAll();
   }
 
+  clearFilters(): void {
+    this.pendingFilters.set({
+      searchTerm: '',
+      gender: '',
+      dobFrom: '',
+      dobTo: ''
+    });
+    this.applyFilters();
+  }
+
   exportData(format: 'csv' | 'xml'): void {
     this.cardsService.exportData(format).subscribe({
       next: (blob) => {

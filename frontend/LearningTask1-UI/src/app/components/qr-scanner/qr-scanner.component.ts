@@ -32,7 +32,6 @@ export class QrScannerComponent {
     }
 
     onScanError(error: Error): void {
-        // Ignore frequent scan errors when no QR is yet in frame
     }
 
     startScanning(): void {

@@ -46,7 +46,6 @@ export class BusinessCardForm implements OnInit {
       if (data.phoneNumber) this.cardForm.get('phoneNumber')?.setValue(data.phoneNumber);
       if (data.address) this.cardForm.get('address')?.setValue(data.address);
 
-      // Mark as touched so validation styles apply immediately
       this.cardForm.markAllAsTouched();
     } else {
       alert("Invalid QR Code format. Please scan a valid vCard.");
@@ -156,7 +155,7 @@ export class BusinessCardForm implements OnInit {
         },
         error: (err) => {
           this.isSubmitting = false;
-          this.isConfirming = false; // Go back to form on error so user can see/edit
+          this.isConfirming = false;
           this.handleServerErrors(err);
         }
       });
@@ -168,7 +167,7 @@ export class BusinessCardForm implements OnInit {
         },
         error: (err) => {
           this.isSubmitting = false;
-          this.isConfirming = false; // Go back to form on error
+          this.isConfirming = false;
           this.handleServerErrors(err);
         }
       });
