@@ -70,6 +70,37 @@ export class BusinessCardList implements OnInit {
     this.loadAll();
   }
 
+  exportData(format: 'csv' | 'xml'): void {
+    this.cardsService.exportData(format).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BusinessCardsExport.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => alert('Export failed. Check console for details.')
+    });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.cardsService.importData(file).subscribe({
+        next: (res) => {
+          alert('Import successful: ' + (res.message || 'Records imported.'));
+          this.loadAll();
+        },
+        error: (err) => alert('Import failed. Check console for details.')
+      });
+      input.value = '';
+    }
+  }
+
   createNew(): void {
     this.router.navigate(['/create']);
   }

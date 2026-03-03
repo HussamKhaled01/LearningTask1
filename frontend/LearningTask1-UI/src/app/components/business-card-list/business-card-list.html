@@ -35,8 +35,15 @@
     </div>
 
     <div class="header-buttons">
-      <button class="btn export compact-btn">Export</button>
-      <button class="btn import compact-btn">Import</button>
+      <div class="dropdown">
+        <button class="btn export compact-btn">Export ▼</button>
+        <div class="dropdown-content">
+          <button (click)="exportData('csv')">Export as CSV</button>
+          <button (click)="exportData('xml')">Export as XML</button>
+        </div>
+      </div>
+      <input type="file" #fileImportInput (change)="onFileSelected($event)" accept=".csv,.xml" style="display: none;" />
+      <button class="btn import compact-btn" (click)="fileImportInput.click()">Import</button>
       <button class="btn add compact-btn" (click)="createNew()">Add New Card</button>
     </div>
   </div>

@@ -110,4 +110,22 @@ export class BusinessCardService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  exportData(format: 'csv' | 'xml'): Observable<Blob> {
+    const f = this.filterSignal();
+    // Use a large pageSize since we likely want to export all filtered records, not just one page
+    let url = `${this.apiUrl}/export?format=${format}&pageNumber=1&pageSize=1000000`;
+    if (f.searchTerm) url += `&searchTerm=${encodeURIComponent(f.searchTerm)}`;
+    if (f.gender) url += `&gender=${encodeURIComponent(f.gender)}`;
+    if (f.dobFrom) url += `&dobFrom=${encodeURIComponent(f.dobFrom)}`;
+    if (f.dobTo) url += `&dobTo=${encodeURIComponent(f.dobTo)}`;
+
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  importData(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post(`${this.apiUrl}/import`, formData);
+  }
 }

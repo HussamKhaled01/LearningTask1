@@ -1,7 +1,13 @@
 <div class="task-detail-container">
     <div class="card-wrapper">
-        <div class="header">
-            <h1>{{ isEditMode ? 'Edit Business Card' : 'Add New Business Card' }}</h1>
+        <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
+            <h1 style="margin:0;">{{ isEditMode ? 'Edit Business Card' : 'Add New Business Card' }}</h1>
+            @if (!isEditMode && !isConfirming) {
+            <button type="button" class="btn import compact-btn" (click)="openScanner()"
+                style="background-color: #343a40; color: white;">
+                📷 Scan QR Code
+            </button>
+            }
         </div>
 
         @if (serverErrors.length > 0) {
@@ -93,7 +99,7 @@
             </div>
         </form>
         } @else {
-        
+
         <div class="task-details-wrapper">
             <div class="task-details">
                 <div class="details-grid">
@@ -140,4 +146,9 @@
         </div>
         }
     </div>
+
+    @if (showScanner) {
+    <app-qr-scanner (scanSuccess)="onScanSuccess($event)" (scanCancel)="closeScanner()">
+    </app-qr-scanner>
+    }
 </div>

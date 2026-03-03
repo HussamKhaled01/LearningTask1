@@ -1,0 +1,24 @@
+<div class="scanner-container">
+    <div class="scanner-header">
+        <h3>Scan Business Card QR</h3>
+        <button type="button" class="btn-close" (click)="stopScanning()">×</button>
+    </div>
+
+    <div class="scanner-body">
+        <zxing-scanner [formats]="allowedFormats" (scanSuccess)="onScanSuccess($event)"
+            (scanError)="onScanError($event)" (camerasFound)="onCamerasFound($event)"
+            (permissionResponse)="onHasPermission($event)">
+        </zxing-scanner>
+
+        @if (hasPermission === false) {
+        <div class="alert error">
+            Camera permission was denied. Please allow camera access.
+        </div>
+        }
+        @if (hasCameras === false && hasPermission) {
+        <div class="alert warning">
+            No cameras found on your device.
+        </div>
+        }
+    </div>
+</div>

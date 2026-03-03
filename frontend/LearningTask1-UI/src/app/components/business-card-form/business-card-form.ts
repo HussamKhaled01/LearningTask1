@@ -3,11 +3,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 import { BusinessCardService } from '../../services/business-card-service';
 import { CommonModule } from '@angular/common';
+import { QrScannerComponent } from '../qr-scanner/qr-scanner.component';
+import { parseVCard } from '../../utils/vcard-parser';
 
 @Component({
   selector: 'app-business-card-form',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, QrScannerComponent],
   templateUrl: './business-card-form.html',
   styleUrl: './business-card-form.css',
 })
@@ -23,6 +25,33 @@ export class BusinessCardForm implements OnInit {
   previewUrl: string | null = null;
 
   isConfirming = false;
+  showScanner = false;
+
+  openScanner(): void {
+    this.showScanner = true;
+  }
+
+  closeScanner(): void {
+    this.showScanner = false;
+  }
+
+  onScanSuccess(vCardString: string): void {
+    this.showScanner = false;
+    const data = parseVCard(vCardString);
+    if (data) {
+      if (data.name) this.cardForm.get('name')?.setValue(data.name);
+      if (data.gender) this.cardForm.get('gender')?.setValue(data.gender);
+      if (data.dob) this.cardForm.get('dob')?.setValue(data.dob);
+      if (data.email) this.cardForm.get('email')?.setValue(data.email);
+      if (data.phoneNumber) this.cardForm.get('phoneNumber')?.setValue(data.phoneNumber);
+      if (data.address) this.cardForm.get('address')?.setValue(data.address);
+
+      // Mark as touched so validation styles apply immediately
+      this.cardForm.markAllAsTouched();
+    } else {
+      alert("Invalid QR Code format. Please scan a valid vCard.");
+    }
+  }
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
